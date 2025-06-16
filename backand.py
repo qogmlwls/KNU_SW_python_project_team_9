@@ -12,7 +12,7 @@ import time
 app = FastAPI()
 
 # 광고 관련 키워드 (원하는 만큼 추가 가능)
-ad_keywords = [
+AD_KEYWORDS = [
     "#광고", "#협찬", "#체험단", "#PPL", "소정의 원고료", "원고료를 지원받아", "제품을 제공받아", 
     "대가를 받고", "후원을 받아", "협찬을 받아", "리뷰 요청", "서포터즈", "이 글은 협찬을 받아 작성되었습니다"
 ]
@@ -39,9 +39,10 @@ def analyze_blog(url: str):
 
         is_ad = any(keyword in content for keyword in AD_KEYWORDS)
         return {
-            "title": title,
-            "summary": content[:300],
-            "category": "광고" if is_ad else "일반"
+            "광고" if is_ad else "일반"
+#            "title": title,
+#            "summary": content[:300],
+ #           "category": "광고" if is_ad else "일반"
         }
     finally:
         driver.quit()
