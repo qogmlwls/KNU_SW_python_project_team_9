@@ -4,12 +4,23 @@
 # 결과 출력
 
 from fastapi import FastAPI, Query
+from fastapi.middleware.cors import CORSMiddleware
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 import time
 
 app = FastAPI()
+
+
+# ✅ CORS 허용 설정
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 또는 ["chrome-extension://확장ID"]
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # 광고 관련 키워드 (원하는 만큼 추가 가능)
 AD_KEYWORDS = [
