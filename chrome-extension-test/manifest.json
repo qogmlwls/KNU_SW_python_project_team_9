@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Ad Detector",
+  "version": "1.0",
+  "permissions": ["scripting", "tabs"],
+  "host_permissions": ["http://49.247.175.145/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://search.naver.com/*"],
+      "js": ["content.js"]
+    }
+  ]
+}
