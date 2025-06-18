@@ -59,7 +59,7 @@ AD_KEYWORDS = sorted(set(
 
 reader = easyocr.Reader(['ko'], gpu=False)
 
-# ✅ 이미지 태그에서 OCR 텍스트 추출
+# 이미지 태그에서 OCR 텍스트 추출
 def extract_text_from_images(image_tags):
     all_text = ""
     for img in image_tags:
@@ -79,7 +79,7 @@ def extract_text_from_images(image_tags):
             continue
     return all_text
 
-# ✅ 전체 페이지 스크린샷에서 OCR
+# 전체 페이지 스크린샷에서 OCR
 def extract_text_from_full_screenshot(driver):
     MAX_HEIGHT = 5000
     total_height = driver.execute_script("return document.body.scrollHeight")
@@ -101,7 +101,7 @@ def extract_text_from_full_screenshot(driver):
     result = reader.readtext(image_bgr)
     return " ".join([text for (_, text, _) in result])
 
-# ✅ 블로그 분석 함수
+# 블로그 분석 함수
 def analyze_blog(url: str):
     options = Options()
     options.add_argument("--headless=new")
@@ -152,7 +152,7 @@ def analyze_blog(url: str):
     finally:
         driver.quit()
 
-# ✅ API 엔드포인트
+# API 엔드포인트
 @app.get("/check_blog")
 def check_blog(url: str = Query(...)):
     return analyze_blog(url)
