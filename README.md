@@ -34,8 +34,8 @@
 
 백앤드 설치 및 실행 방법
 1. 서버 구축 및 환경 설정 진행
-   git 설치 : sudo apt install git -y
-   프로젝트 가져오기 : git clone https://github.com/qogmlwls/KNU_SW_python_project_team_9.git
+   1-1. git 설치 : sudo apt install git -y
+   1-2. 프로젝트 가져오기 : git clone https://github.com/qogmlwls/KNU_SW_python_project_team_9.git
    app.py 가 위치한 폴더로 이동 ex. cd ~/KNU_SW_python_project_team_9
    라이브러리, 프로그램 설치 :
    sudo apt install python3 python3-pip -y
