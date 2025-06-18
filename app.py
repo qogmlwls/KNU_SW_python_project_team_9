@@ -1,3 +1,4 @@
+//백엔드 코드 (이미지 검사 전)
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
