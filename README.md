@@ -27,15 +27,32 @@
 본 프로젝트는 다음과 같은 환경에서 설치 및 실행되었습니다:
 
 서버 사양
-- 하드웨어 : CPU: 1 rCore, RAM: 2 GB, HDD: SSD 25 GB, NETWORK: 10 Gbps
+- 하드웨어 : CPU: 4 rCore, RAM: 4 GB, HDD: SSD 50 GB, NETWORK: 10 Gbps
 - 운영체제 : Ubuntu 20.04 LTS(64bit)
 - 웹 브라우저 : Google chrome 137.0.7151.103
 - 웹 드라이버 : ChromeDriver 137.0.7151.103
 
 백앤드 설치 및 실행 방법
 1. 서버 구축 및 환경 설정 진행
-2. app.py 가 위치한 폴더로 이동
-3. FastAPI 서버 실행
+   git 설치 : sudo apt install git -y
+   프로젝트 가져오기 : git clone https://github.com/qogmlwls/KNU_SW_python_project_team_9.git
+   app.py 가 위치한 폴더로 이동 ex. cd ~/KNU_SW_python_project_team_9
+   라이브러리, 프로그램 설치 :
+   sudo apt install python3 python3-pip -y
+   sudo pip install easyocr selenium beautifulsoup4 requests
+   * pip show easyocr 로 설치되었는지 확인*
+   sudo pip install fastapi uvicorn
+   wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+   sudo apt install ./google-chrome-stable_current_amd64.deb -y
+   google-chrome --version (결과값 : 137.0.7151.103)
+   **크롬 브라우저와 driver 버전이 같아야 함.
+   wget https://storage.googleapis.com/chrome-for-testing-public/137.0.7151.103/linux64/chromedriver-linux64.zip
+   unzip chromedriver-linux64.zip
+   sudo mv chromedriver-linux64/chromedriver /usr/bin/chromedriver
+   sudo chmod +x /usr/bin/chromedriver
+   chromedriver --version
+   pip install webdriver-manager
+2. FastAPI 서버 실행
    uvicorn app:app --host 0.0.0.0 --port 80 &
 
 프론트앤드 설치 및 실행 방법
