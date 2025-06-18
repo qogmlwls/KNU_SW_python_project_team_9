@@ -1,4 +1,3 @@
-//백엔드 코드 (이미지 검사 전)
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -6,8 +5,16 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+
 from bs4 import BeautifulSoup
+import requests
 import time
+
+from io import BytesIO
+import easyocr
+from PIL import Image
+import numpy as np
+import cv2
 
 app = FastAPI()
 
@@ -19,13 +26,62 @@ app.add_middleware(
 )
 
 AD_KEYWORDS = [
-    "#광고", "광고", "#협찬","협찬", "#체험단", "체험단", "#PPL", "원고료", "소정의 원고료", "지원받아", "제공받아", 
-    "대가 받고", "후원 받아", "협찬 받아", "리뷰 요청", "서포터즈", "식사권", "제공 받아"
+    "포스팅", "협찬", "제공", "원고료", "서비스", "광고비", "지원", "원고료 지원", "광고료 지원",
+    "본 포스팅은", "본 포스팅", "이 포스팅은", 
+    "업체", "업체의", "해당 업체의", "해당 업체로부터", "업체로부터", 
+    "소정의", "원고료를", "광고비", "광고비를", "협찬을",
+    "협찬을 받아", "지원받아", "지원을 받아", "제공받아", "제공을 받아", "협찬받아", "제공받은", "지원받은",
+    "작성되었음을 알립니다", "작성된 후기입니다", "작성한 리뷰입니다", "작성되었습니다", "작성된 글입니다", "작성하였습니다"
 ]
 
+reader = easyocr.Reader(['ko'], gpu=False)
+
+# ✅ 이미지 태그에서 OCR 텍스트 추출
+def extract_text_from_images(image_tags):
+    all_text = ""
+    for img in image_tags:
+        src = img.get("src")
+        if not src or src.startswith("data:"):
+            continue  # base64 인라인 이미지 혹은 빈 src는 건너뜀
+        try:
+            response = requests.get(src, timeout=5)
+            img_array = np.asarray(bytearray(response.content), dtype=np.uint8)
+            image = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+            if image is not None:
+                result = reader.readtext(image)
+                for detection in result:
+                    all_text += detection[1] + " "
+        except Exception as e:
+            print(f"[Image OCR Error] Failed to process image: {e}")
+            continue
+    return all_text
+
+# ✅ 전체 페이지 스크린샷에서 OCR
+def extract_text_from_full_screenshot(driver):
+    MAX_HEIGHT = 5000
+    total_height = driver.execute_script("return document.body.scrollHeight")
+    adjusted_height = min(total_height, MAX_HEIGHT)
+
+    driver.set_window_size(1200, adjusted_height)
+    time.sleep(1)
+
+    driver.execute_script("window.scrollTo(0, 0)")
+    time.sleep(0.5)
+
+    screenshot = driver.get_screenshot_as_png()
+    image = Image.open(BytesIO(screenshot))
+
+    # PIL → numpy → BGR (OpenCV 호환)
+    np_image = np.array(image)
+    image_bgr = cv2.cvtColor(np_image, cv2.COLOR_RGB2BGR)
+
+    result = reader.readtext(image_bgr)
+    return " ".join([text for (_, text, _) in result])
+
+# ✅ 블로그 분석 함수
 def analyze_blog(url: str):
     options = Options()
-    options.add_argument("--headless")
+    options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
 
@@ -42,28 +98,38 @@ def analyze_blog(url: str):
             pass
 
         soup = BeautifulSoup(driver.page_source, "html.parser")
-
         title_tag = soup.select_one(".se-title-text") or soup.select_one(".pcol1")
         content_tag = soup.select_one(".se-main-container") or soup.select_one("#postViewArea")
 
         title = title_tag.get_text(strip=True) if title_tag else "제목 없음"
-        content = content_tag.get_text(separator=' ', strip=True) if content_tag else "본문 없음"
+        content = content_tag.get_text(separator=' ', strip=True) if content_tag else ""
 
-        is_ad = any(keyword in content for keyword in AD_KEYWORDS)
+        full_text = content + " " + soup.get_text(separator=' ', strip=True)
 
-        images = soup.find_all("img")
-        videos = soup.find_all("iframe")
+        # 이미지 OCR
+        image_tags = soup.find_all("img")
+        image_text = extract_text_from_images(image_tags)
+
+        # 전체 화면 OCR
+        screenshot_text = extract_text_from_full_screenshot(driver)
+
+        # 전체 텍스트 통합
+        total_text = " ".join([full_text, image_text, screenshot_text])
+
+        # 광고 키워드 매칭
+        matched_keywords = [kw for kw in AD_KEYWORDS if kw in total_text]
+        is_ad = len(matched_keywords) > 0
 
         return {
             "title": title,
-            "summary": content[:300],
-            "image_count": len(images),
-            "video_count": len(videos),
-            "category": "광고 문구 있음" if is_ad else "광고 문구 없음"
+            "category": "광고 문구 있음" if is_ad else "광고 문구 없음",
+            "matched_keywords": matched_keywords
         }
+
     finally:
         driver.quit()
 
+# ✅ API 엔드포인트
 @app.get("/check_blog")
 def check_blog(url: str = Query(...)):
     return analyze_blog(url)
