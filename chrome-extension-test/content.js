@@ -1,100 +1,91 @@
-// setTimeout(() => {
-
-//   // const links = document.querySelectorAll(
-//   //   '#main_pack > section > div.api_subject_bx > ul > li > div > div.detail_box > div.dsc_area > a'
-//   // );
-
-//   // links.forEach((link) => {
-//   //      const rawHref = link.getAttribute('href'); // 실제 속성값 확인
-//   // //  const url = link.href; // 자동 변환된 URL (있을 수도, 없을 수도 있음)
-//   // // //  alert(rawHref);
-//   //   chrome.runtime.sendMessage({ type: "CHECK_AD", url:rawHref }, (result) => {
-//   //             alert(result.label);
-
-//   //     if (result && result.label === '광고') {
-//   //       //alert(result);
-//   //       const target = link.parentElement?.parentElement?.parentElement;
-//   //       if (target) {
-//   //         target.style.backgroundColor = 'yellow';
-//   //       }
-//   //       else{
-//   //           target.style.backgroundColor = 'blue';
-//   //       }
-//   //     }
-//   //   });
-//   // });
-
-//     const link = "https://blog.naver.com/chemist_sun/223856739539";
-//       chrome.runtime.sendMessage({ type: "CHECK_AD", url:link }, (result) => {
-//       if (result && result.label === '광고') {
-//         alert('결과값 : '+result);
-//         const target = link.parentElement?.parentElement?.parentElement;
-//         if (target) {
-//           target.style.backgroundColor = 'yellow';
-//         }
-//         else{
-//             target.style.backgroundColor = 'blue';
-//         }
-//       }
-//     });
-// }, 1000); // 1초 뒤 실행
-
-
 console.log("content.js");
+
 const elements = document.querySelectorAll(
   '#main_pack > section > div.api_subject_bx > ul > li > div > div.detail_box > div.dsc_area > a'
 );
 
 elements.forEach((element) => {
-
   const rawHref = element.getAttribute('href');
-  chrome.runtime.sendMessage({ type: "CHECK_AD", url:rawHref }, (result) => {
-    // 문제는 응답이 content.js에 도달하지 못하는 것
-    console.log("response");
-    //alert('결과값 : '+result.label);
-    if (result && result.label === '광고') {//
-      const target = element.parentElement?.parentElement?.parentElement;
-      if (target) {
-        target.style.backgroundColor = 'yellow';
-      }
-    }
-    else{
-      const target = element.parentElement?.parentElement?.parentElement;
-      if (target) {
-        target.style.backgroundColor = 'blue';
-      }
-    
-    }
-  });
 
+  chrome.runtime.sendMessage({ type: "CHECK_AD", url: rawHref }, (result) => {
+    console.log("response");
+
+    if (!result || result.error) return;
+
+    console.log("keyword list : ", result.keywordlist);
+
+    const target = element.parentElement?.parentElement?.parentElement;
+    if (target) {
+      target.style.backgroundColor = result.label === '광고' ? 'yellow' : 'blue';
+    }
+
+    // 팝업용 div 생성
+    const popup = document.createElement('div');
+    popup.style.position = 'fixed'; // <- fixed로 설정
+    popup.style.backgroundColor = 'white';
+    popup.style.border = '1px solid gray';
+    popup.style.padding = '5px';
+    popup.style.fontSize = '12px';
+    popup.style.zIndex = '1000';
+    popup.style.display = 'none';
+    popup.style.whiteSpace = 'pre-line';
+
+    popup.textContent = `키워드 포함:\n${result.keywordlist.join('\n')}`;
+    document.body.appendChild(popup);
+
+    let popupTimeout;
+
+    element.addEventListener('mouseenter', (e) => {
+      popup.style.left = e.clientX + 10 + 'px';
+      popup.style.top = e.clientY + 10 + 'px';
+      popup.style.display = 'block';
+    });
+
+    element.addEventListener('mouseleave', () => {
+      popupTimeout = setTimeout(() => {
+        popup.style.display = 'none';
+      }, 100); // 살짝 지연시켜 팝업 내부 진입 허용
+    });
+
+    popup.addEventListener('mouseenter', () => {
+      clearTimeout(popupTimeout); // 팝업 안에 있을 땐 안 사라짐
+    });
+
+    popup.addEventListener('mouseleave', () => {
+      popup.style.display = 'none';
+    });
+  });
 });
 
 
+// console.log("content.js");
+// const elements = document.querySelectorAll(
+//   '#main_pack > section > div.api_subject_bx > ul > li > div > div.detail_box > div.dsc_area > a'
+// );
 
-// let element = document.querySelector("#main_pack > section > div.api_subject_bx > ul > li:nth-child(1) > div > div.detail_box > div.title_area > a");
-// const rawHref = element.getAttribute('href'); // 실제 속성값 확인
-// // const link = "https://blog.naver.com/chemist_sun/223856739539";
+// elements.forEach((element) => {
 
-// chrome.runtime.sendMessage({ type: "CHECK_AD", url:rawHref }, (result) => {
-//   // 문제는 응답이 content.js에 도달하지 못하는 것
-//   console.log("response");
-//   //alert('결과값 : '+result.label);
-//   if (result && result.label === '광고') {//
-//     const target = element.parentElement?.parentElement?.parentElement;
-//     if (target) {
-//       target.style.backgroundColor = 'yellow';
+//   const rawHref = element.getAttribute('href');
+//   chrome.runtime.sendMessage({ type: "CHECK_AD", url:rawHref }, (result) => {
+//     // 문제는 응답이 content.js에 도달하지 못하는 것
+//     console.log("response");
+//     //alert('결과값 : '+result.label);
+//     // let keyword_list = ['협찬','협찬을 제공받아','원고료'];
+//     console.log("keyword list : "+result.keywordlist);
+//     if (result && result.label === '광고') {//
+//       const target = element.parentElement?.parentElement?.parentElement;
+//       if (target) {
+//         target.style.backgroundColor = 'yellow';
+//       }
 //     }
-//   }
-//   else{
-//      const target = element.parentElement?.parentElement?.parentElement;
-//     if (target) {
-//       target.style.backgroundColor = 'blue';
+//     else{
+//       const target = element.parentElement?.parentElement?.parentElement;
+//       if (target) {
+//         target.style.backgroundColor = 'blue';
+//       }
+    
 //     }
-  
-//   }
+//   });
+
 // });
-
-// let element = document.querySelector("#main_pack > section > div.api_subject_bx > ul > li:nth-child(1) > div");
-// element.style.backgroundColor = 'red';
-// alert('실행됨');
 

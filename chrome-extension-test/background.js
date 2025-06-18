@@ -6,17 +6,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     fetch(`http://49.247.175.145/check_blog?url=${message.url}`)
       .then(res => res.text())
       .then(text => {
+        
         console.log("결과값 : " + text);
         const cleanArray = JSON.parse(text);
         const cleanLabel = cleanArray[0];
         console.log("cleanLabel : " + cleanLabel);
-        sendResponse({ label: cleanLabel });
+        let keyword_list = ['협찬','협찬을 제공받아','원고료'];
+        
+        sendResponse({ label: cleanLabel ,keywordlist : keyword_list });
         console.log("sendResponse 전송함");
+
       })
       .catch(err => {
         console.error("API 호출 실패:", err);
         sendResponse({ label: err.message + ' url: ' + message.url, error: true });
       });
+
 
      // sendResponse({ label: "일반" });
 

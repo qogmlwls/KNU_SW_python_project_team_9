@@ -28,6 +28,8 @@ AD_KEYWORDS = [
     "대가를 받고", "후원을 받아", "협찬을 받아", "리뷰 요청", "서포터즈", "이 글은 협찬을 받아 작성되었습니다"
 ]
 
+# https://blog.naver.com/jiinn0126/223883394626?photoView=0
+
 
 def analyze_blog(url: str):
     options = Options()
